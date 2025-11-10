@@ -179,6 +179,104 @@ const char* categorias(categoriaPlanta tipo){
 
 }
 
+// 5. Registrar colheita e remover plantação
+void registrar_colheita(plantio *p) {
+    int codigo, i, j;
+    
+    // 5.1. Verifica se o plantio está vazio
+    if (verifica_plantio_vazio(*p) == 1) {
+        printf("Nenhuma plantacao cadastrada para colher!\n");
+        return;
+    }
+    
+    // 5.2. Mostra a lista de plantações cadastradas
+    printf("\n------- Registrar Colheita -------\n");
+    printf("Plantacoes cadastradas:\n");
+    for (i = 0; i < p->ultimo; i++) {
+        printf("COD: %d - %s (Plantio: %02d/%02d/%04d)\n", 
+               p->elem[i].cod, p->elem[i].cultivo,
+               p->elem[i].data_plantio.dia, 
+               p->elem[i].data_plantio.mes, 
+               p->elem[i].data_plantio.ano);
+    }
+    
+    // 5.3. Pega o código da plantação que deseja ser registrada
+    printf("\nDigite o CODIGO da plantacao a ser colhida: ");
+    scanf("%d", &codigo);
+    getchar();
+    
+    // 5.4. Busca a plantação pelo código
+    int posicao = -1;
+    for (i = 0; i < p->ultimo; i++) {
+        if (p->elem[i].cod == codigo) {
+            posicao = i;
+            break;
+        }
+    }
+    
+    if (posicao == -1) {
+        printf("Plantacao com codigo %d nao encontrada!\n", codigo);
+        return;
+    }
+    
+    // 5.5. Mostra dados da plantação
+    printf("\n>>> CONFIRMAR COLHEITA <<<\n");
+    exibe_plantacao(p->elem[posicao]);
+    
+    // 5.6. Confirmar registro da colheita
+    char confirmacao;
+    printf("Confirmar colheita? (S/N): ");
+    scanf("%c", &confirmacao);
+    getchar();
+    
+    if (confirmacao == 'S' || confirmacao == 's') {
+        // Registra data real da colheita
+        data data_real_colheita;
+        printf("Digite a data REAL da colheita (DD/MM/AAAA): ");
+        scanf("%d/%d/%d", &data_real_colheita.dia, &data_real_colheita.mes, &data_real_colheita.ano);
+        getchar();
+        
+        // Mostra mensagem de sucesso
+        printf("\n>>> COLHEITA REGISTRADA COM SUCESSO! <<<\n");
+        printf("Cultura: %s\n", p->elem[posicao].cultivo);
+        printf("Data plantio: %02d/%02d/%04d\n", 
+               p->elem[posicao].data_plantio.dia,
+               p->elem[posicao].data_plantio.mes,
+               p->elem[posicao].data_plantio.ano);
+        printf("Data colheita: %02d/%02d/%04d\n",
+               data_real_colheita.dia,
+               data_real_colheita.mes,
+               data_real_colheita.ano);
+        printf("Talhao %d liberado para pousio/novo plantio!\n", posicao);
+        
+        // Remove a plantação da lista
+        remover_plantacao(p, posicao);
+    } else {
+        printf("Colheita cancelada.\n");
+    }
+}
+
+// 6. Remover plantação da lista
+void remover_plantacao(plantio *p, int posicao) {
+    int i;
+    
+    // 6.1. Validar posição
+    if (posicao < 0 || posicao >= p->ultimo) {
+        printf("Posicao invalida!\n");
+        return;
+    }
+    
+    // 6.2. Deslocar todos os elementos uma posição para trás
+    for (i = posicao; i < p->ultimo - 1; i++) {
+        p->elem[i] = p->elem[i + 1];
+    }
+    
+    // 6.3. Atualizar o contador de plantações
+    p->ultimo--;
+    
+    printf("Plantacao removida. Total de plantacoes ativas: %d\n", p->ultimo);
+}
+
 void exibe_plantacao(plantacao p){
     printf("------------------------------------------\n");
     printf("   Plantacao COD: %d\n", p.cod);
