@@ -18,5 +18,6 @@ O projeto apresenta 7 funcionalidades principais para controle de um sistema de 
 ## 🧰 Ferramentas Utilizadas
 
 - **Linguagem C**, todo o projeto foi desenvolvido e criado em C
+- Todo projeto é possível de ser rodado apenas no terminal da máquina
 
 ---
