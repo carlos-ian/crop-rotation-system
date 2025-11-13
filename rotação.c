@@ -1,7 +1,9 @@
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <time.h>
 
 //Máximo de plantações para rotação
 #define MAX 100
@@ -511,6 +513,83 @@ void exibir_resumo_talhoes(plantio p) {
     printf("\n=================================\n");
 }
 
+data obter_data_atual() {
+    time_t t = time(NULL);
+    struct tm *agora = localtime(&t);
+    data data_atual;
+    data_atual.dia = agora->tm_mday;
+    data_atual.mes = agora->tm_mon + 1; // tm_mon é 0-11
+    data_atual.ano = agora->tm_year + 1900; // tm_year é anos desde 1900
+    return data_atual;
+}
+
+time_t data_para_time_t(data d) {
+    struct tm t;
+    t.tm_mday = d.dia;
+    t.tm_mon = d.mes - 1;   // time.h usa mês 0-11
+    t.tm_year = d.ano - 1900; // time.h usa ano desde 1900
+    t.tm_hour = 0;
+    t.tm_min = 0;
+    t.tm_sec = 0;
+    t.tm_isdst = -1; // Deixa o sistema determinar se há Horário de Verão
+    return mktime(&t);
+}
+
+void consultar_colheita_proxima(plantio p) {
+    int i;
+    int colheitas_encontradas = 0;
+    
+    // 1. Obter a data atual
+    data hoje = obter_data_atual();
+    time_t hoje_ts = data_para_time_t(hoje);
+    
+    // 2. Calcular o limite de tempo (15 dias em segundos)
+    const long long QUINZE_DIAS_SEGUNDOS = 15LL * 24 * 60 * 60;
+    time_t limite_ts = hoje_ts + QUINZE_DIAS_SEGUNDOS;
+
+    printf("\n\n=== 🚨 ALERTA DE COLHEITA PRÓXIMA 🚨 ===\n");
+    printf("         Data Atual: %02d/%02d/%04d\n", hoje.dia, hoje.mes, hoje.ano);
+    printf("         Plantios nos próximos 15 dias\n");
+    printf("========================================\n");
+
+    if (p.ultimo == 0) {
+        printf("Nenhuma plantação ativa cadastrada.\n");
+        return;
+    }
+
+    for (i = 0; i < p.ultimo; i++) {
+        time_t colheita_ts = data_para_time_t(p.elem[i].colheita);
+        
+        // Colheita deve ser após ou igual a 'hoje' E antes ou igual a 'limite'
+        if (colheita_ts >= hoje_ts && colheita_ts <= limite_ts) {
+            
+            // Calcula a diferença em dias (aproximada, já que time_t é mais preciso)
+            double diferenca_segundos = difftime(colheita_ts, hoje_ts);
+            int dias_restantes = (int)(diferenca_segundos / (24.0 * 60.0 * 60.0));
+            
+            printf("\n-- Plantacao COD: %d --\n", p.elem[i].cod);
+            printf("  Cultivo:          %s\n", p.elem[i].cultivo);
+            printf("  Categoria:        %s\n", categorias(p.elem[i].tipo));
+            printf("  **Previsão de Colheita:** %02d/%02d/%04d\n",
+                   p.elem[i].colheita.dia,
+                   p.elem[i].colheita.mes,
+                   p.elem[i].colheita.ano);
+            printf("  **Dias Restantes:**     %d dias\n", dias_restantes);
+            printf("--------------------------\n");
+            
+            colheitas_encontradas++;
+        }
+    }
+
+    // 4. Exibir resultado final
+    if (colheitas_encontradas == 0) {
+        printf("\nNenhuma plantação com colheita prevista nos próximos 15 dias.\n");
+    } else {
+        printf("\nTotal de alertas de colheita: %d plantações.\n", colheitas_encontradas);
+    }
+    printf("========================================\n");
+}
+
 void menu_principal() {
     plantio sistema;
     int opcao;
@@ -528,6 +607,7 @@ void menu_principal() {
         printf("3. REGISTRAR COLHEITA\n");
         printf("4. ATUALIZAR PLANTIO\n");
         printf("5. OBTER RELATÓRIO DE TALHÕES\n");
+        printf("6. CONSULTAR COLHEITAS PRÓXIMAS\n");
         printf("0. SAIR DO SISTEMA\n");
         printf("-----------------------------------\n");
         printf("Escolha uma opcao: ");
@@ -551,6 +631,8 @@ void menu_principal() {
             case 5:
                 exibir_resumo_talhoes(sistema);
                 break;
+            case 6:
+                consultar_colheita_proxima(sistema);
             case 0:
                 printf("\n>>> Obrigado por usar o Sistema de Rotacao de Culturas!\n");
                 printf(">>> Encerrando programa...\n");
