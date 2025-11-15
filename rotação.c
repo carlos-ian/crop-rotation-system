@@ -131,7 +131,7 @@ void ler_plantacao(plantacao *p){
     fgets(buffer_leitura, 50, stdin);
     remover_newline(buffer_leitura);
     sscanf(buffer_leitura, "%d/%d/%d", &p -> colheita.dia, &p -> colheita.mes, &p -> colheita.ano);
-    printf("Digite a produtividade média (Use PONTO, Ex: 120.5): ");
+    printf("Digite a produtividade media por ano (Ex: 120.5): ");
     p->produtividade = ler_float(); 
     printf("------------------------------------------\n");
 }
