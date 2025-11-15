@@ -1,20 +1,19 @@
-
+//Bibliotecas
 #include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
+#include <stdlib.h> // Para atoi (converte string para int) e atof (converte string para float)
 #include <stdbool.h>
-#include <time.h>
 
 //Máximo de plantações para rotação
 #define MAX 100
 
 //Definindo os tipos de plantação
 typedef enum{
-    Leguminosas,    // Definido para 0
-    Cereal,         // Definido para 1
-    Hortaliça,      // Definido para 2
-    Frutifera,      // Definido para 3
-    Outro           // Definido para 4
+    Leguminosas = 1,
+    Cereal,
+    Hortalica,
+    Frutifera,
+    Outro
 } categoriaPlanta;
 
 //Struct para data
@@ -23,6 +22,7 @@ typedef struct {
  int mes;
  int ano;
 }data;
+
 //Definindo os dados de plantação
 typedef struct{
     int cod;
@@ -33,6 +33,7 @@ typedef struct{
     data colheita;
     float produtividade;
 }plantacao;
+
 //lista que será armazenada o plantio
 typedef struct {
     plantacao elem[MAX];
@@ -40,611 +41,493 @@ typedef struct {
     int ultimo;
 }plantio;
 
-// --------- Funções Iniciais ---------------
+// --- PROTÓTIPOS ---
+void criar_plantio_vazio(plantio *p);
+int verifica_plantio_vazio (plantio p);
+int verifica_plantio_cheio(plantio p);
+void remover_newline(char *str);
+void ler_plantacao(plantacao *p);
+void inserir_plantacao(plantio *p, plantacao nova_cultura);
+const char* categorias(categoriaPlanta tipo);
+void exibe_plantacao(plantacao p); // <-- SÓ 1 ARGUMENTO
+void exibe_lista_plantio (plantio p);
+int consultar_plantacao_lista (plantio p, char nome_cultivo[]);
+int consultar_plantacao_lista_por_cod(plantio p, int cod);
+void remover_plantacao_lista(plantio *p, int i);
+void alterar_plantacao_lista (plantio *p, int i);
+void MENU();
+void exibe_lista_por_categoria(plantio p);
+void alerta_colheita_por_mes_e_ano(plantio p);
+void controle_ocupacao(plantio p);
+int ler_inteiro();
+float ler_float();
+void exibe_lista_por_nome(plantio p); 
 
-// 1. Criar plantio vazio
-void criar_plantio_vazio(plantio *p){
-    p -> primeiro = 0;
-    p -> ultimo = p -> primeiro;
-} /* atribuindo o valor de 0 para ambos */
-
-// 2. Verificando se plantio está vazio
-int verifica_plantio_vazio (plantio p){
-    if (p.primeiro == p.ultimo){
-        return 1;
-    }else{
-        return 0;
-    }
-}
-
-// 3. Verificando se plantio está cheio
-int verifica_plantio_cheio(plantio p){
-    if (p.ultimo == MAX){
-        return 1;
-    }else{
-        return 0;
-    }
-}
-
-// Função de limpeza
+// --- FUNÇÕES DE LEITURA SEGURA ---
 void remover_newline(char *str){
     size_t len = strlen(str);
     if (len > 0 && str[len - 1] == '\n'){
         str[len - 1] = '\0';
     }
 }
+int ler_inteiro() {
+    char buffer[50];
+    fgets(buffer, 50, stdin);
+    remover_newline(buffer);
+    return atoi(buffer);
+}
+float ler_float() {
+    char buffer[50];
+    fgets(buffer, 50, stdin);
+    remover_newline(buffer);
+    return atof(buffer); 
+}
 
-// --------- Funções das Funcionalidades ---------------
+// --- FIM DAS FUNÇÕES DE LEITURA ---
 
-// 1. Cadastrar plantação
-void cadastrar_plantacao(plantacao *p){
-    int tipo_int;
-    char resposta_irrigado;
+
+// 1. Criar plantio vazio
+void criar_plantio_vazio(plantio *p){
+    p -> primeiro = 0;
+    p -> ultimo = p -> primeiro;
+}
+
+// 2. Verificando se plantio está vazio
+int verifica_plantio_vazio (plantio p){
+    return (p.primeiro == p.ultimo);
+}
+
+// 3. Verificando se plantio está cheio
+int verifica_plantio_cheio(plantio p){
+    return (p.ultimo == MAX);
+}
+
+// 4. Ler a plantação (Segura)
+void ler_plantacao(plantacao *p){
+    char buffer_leitura[50]; 
 
     printf("\n------- Cadastro de Nova Plantacao -------\n");
-
-    // 1.1. Código
     printf("Digite o Codigo (ID) da planatacao: ");
-    scanf("%d", &p -> cod);
-    getchar();
-
-    // 1.2 Cultivo
+    p->cod = ler_inteiro(); 
     printf("Digite o nome do cultivo (Ex: Milho, soja): ");
     fgets(p -> cultivo, 40, stdin);
     remover_newline(p -> cultivo);
-
-    // 1.3 Irrigado
-    printf("É irrigado? (S/N)");
-    scanf("%c", &resposta_irrigado);
-    getchar();
-
-    if (resposta_irrigado == 'S' || resposta_irrigado == 's'){
+    printf("Irrigado? (S/N): ");
+    fgets(buffer_leitura, 10, stdin); 
+    remover_newline(buffer_leitura);
+    if (buffer_leitura[0] == 'S' || buffer_leitura[0] == 's'){
         p -> irrigado = true;
     }else{
         p -> irrigado = false;
     }
-
-    // 1.4 Categoria da plantação
     printf("Digite a categoria da plantacao:\n");
-    printf(" (0 = leguminosas, 1 = Cereal, 2 = Hortalica, 3 = Frutifera, 4 = Outros): ");
-    scanf("%d", &tipo_int);
-    getchar();
-
-    p -> tipo = (categoriaPlanta)tipo_int;
-
-    // 1.5 Data plantio
+    printf("(1 = Leguminosas, 2 = Cereal, 3 = Hortalica, 4 = Frutifera, 5 = Outro): ");
+    p->tipo = (categoriaPlanta)ler_inteiro(); 
     printf("Digite a data do plantio (formato DD/MM/AAAA): ");
-    scanf("%d/%d/%d", &p -> data_plantio.dia, &p -> data_plantio.mes, &p -> data_plantio.ano);
-    getchar();
-
-    // 1.6 Data esperada da colheita
+    fgets(buffer_leitura, 50, stdin);
+    remover_newline(buffer_leitura);
+    sscanf(buffer_leitura, "%d/%d/%d", &p -> data_plantio.dia, &p -> data_plantio.mes, &p -> data_plantio.ano);
     printf("Digite a data prevista para a colheita (DD/MM/AAAA): ");
-    scanf("%d/%d/%d", &p -> colheita.dia, &p -> colheita.mes, &p -> colheita.ano);
-    getchar();
-
-    //1.7 Produtividade
-    printf("Digite a produtividade média (Ex: 120.5): ");
-    scanf("%d", &p -> produtividade);
-    getchar();
-
+    fgets(buffer_leitura, 50, stdin);
+    remover_newline(buffer_leitura);
+    sscanf(buffer_leitura, "%d/%d/%d", &p -> colheita.dia, &p -> colheita.mes, &p -> colheita.ano);
+    printf("Digite a produtividade média (Use PONTO, Ex: 120.5): ");
+    p->produtividade = ler_float(); 
     printf("------------------------------------------\n");
 }
 
+
+// 5. Inserir plantação
 void inserir_plantacao(plantio *p, plantacao nova_cultura){
     int i, j;
-
-    // 1. Verificando se tem espaço para plantar
     if (verifica_plantio_cheio(*p) == 1){
-        printf("Nao foi possivel fazer o plantio, todos os talhoes estao ocupados!/n");
+        printf("Nao foi possivel fazer o plantio, todos os talhoes estao ocupados!\n");
         return;
     }
-
-    // 2. Encontrando o espaço para plantar
     i = 0;
     while (i < p -> ultimo && nova_cultura.cod > p -> elem[i].cod){
         i++;
     }
-
-    // 3. Abrindo vaga para a cultura (se necessário)
     j = p -> ultimo;
     while( j > i){
         p -> elem[j] = p -> elem[j - 1];
         j--;
     }
-
-    // 4. Inserir a nova cultura
     p -> elem[i] = nova_cultura;
-
-    // 5. Atualizar o contador
     p -> ultimo++;
+    printf("\nCultivo '%s' (Cod: %d) inserido com sucesso!\n", nova_cultura.cultivo, nova_cultura.cod);
 }
 
 //Função auxiliar para ler a plantação
 const char* categorias(categoriaPlanta tipo){
     switch(tipo){
         case Leguminosas:   return "Leguminosa";
-        case Cereal:        return "Cerela";
-        case Hortaliça:     return "Hortaliça";
+        case Cereal:        return "Cereal";
+        case Hortalica:     return "Hortalica";
         case Frutifera:     return "Frutifera";
         case Outro:         return "Outro";
         default:            return "Desconhecido";
     }
-
 }
 
-// 2. Consultar Plantio
-void consultar_plantio(plantio p) {
-    int codigo, i;
-    int encontrou = 0;
-    
-    printf("\n====== CONSULTAR PLANTAÇÃO ======\n");
-    
-    // 2.1. Verificar se há plantações cadastradas
-    if (verifica_plantio_vazio(p)) {
-        printf("Nenhuma plantacao cadastrada no sistema.\n");
-        return;
+// (Bónus) Consulta por CÓDIGO (para exibir o talhão)
+int consultar_plantacao_lista_por_cod(plantio p, int cod){
+    int i;
+    if(verifica_plantio_vazio(p) == 1){
+        return -1;
     }
-    
-    // 2.2. Mostrar plantações disponíveis para consulta
-    printf("Plantações cadastradas:\n");
-    for (i = 0; i < p.ultimo; i++) {
-        printf("COD: %d - %s\n", p.elem[i].cod, p.elem[i].cultivo);
-    }
-    
-    // 2.3. Solicitar código da plantação desejada
-    printf("\nDigite o CODIGO da plantacao que deseja consultar: ");
-    scanf("%d", &codigo);
-    getchar();
-    
-    // 2.4. Buscar a plantação pelo código
-    for (i = 0; i < p.ultimo; i++) {
-        if (p.elem[i].cod == codigo) {
-            printf("\n>>> PLANTACAO ENCONTRADA:\n");
-            
-            // 2.5. EXIBIR DADOS DA PLANTAÇÃO
-            printf("------------------------------------------\n");
-            printf("   Plantacao COD: %d\n", p.elem[i].cod);
-            printf("------------------------------------------\n");
-            
-            printf("  Cultivo:         %s\n", p.elem[i].cultivo);
-            printf("  Categoria:       %s\n", categorias(p.elem[i].tipo));
-            
-            printf("  Irrigado:        %s\n", p.elem[i].irrigado ? "Sim" : "Nao");
-            
-            printf("  Data do Plantio: %02d/%02d/%04d\n", 
-                   p.elem[i].data_plantio.dia, 
-                   p.elem[i].data_plantio.mes, 
-                   p.elem[i].data_plantio.ano);
-            
-            printf("  Data da Colheita: %02d/%02d/%04d\n", 
-                   p.elem[i].colheita.dia, 
-                   p.elem[i].colheita.mes, 
-                   p.elem[i].colheita.ano);
-            
-            printf("  Produtividade:   %.2f\n", p.elem[i].produtividade);
-            printf("------------------------------------------\n");
-            
-            encontrou = 1;
-            break;
+    i = p.primeiro;
+    while(i < p.ultimo){
+        if(p.elem[i].cod == cod){
+            return i; // Retorna o índice
         }
+        i++;
     }
-    
-    if (!encontrou) {
-        printf("\n>>> ERRO: Plantacao com codigo %d nao encontrada!\n", codigo);
-        printf(">>> Verifique o codigo e tente novamente.\n");
+    return -1;
+}
+
+
+// 6. Exibir uma plantação (Definição com 1 argumento)
+void exibe_plantacao(plantacao p){
+ 
+    printf("------------------------------------------\n");
+    // Mostra o Talhão (posição 1-based) e o Código
+    // Se não encontrar (improvável), mostra -1+1 = 0
+    printf("   Plantacao COD: %d\n", p.cod);
+    printf("------------------------------------------\n");
+    printf("  Cultivo:       %s\n", p.cultivo);
+    printf("  Categoria:     %s\n", categorias(p.tipo));
+    printf("  Irrigado:      %s\n", p.irrigado ? "Sim" : "Nao");
+    printf("  Data do Plantio: %02d/%02d/%d\n", p.data_plantio.dia, p.data_plantio.mes, p.data_plantio.ano);
+    printf("  Data da Colheita: %02d/%02d/%d\n", p.colheita.dia, p.colheita.mes, p.colheita.ano);
+    printf("  Produtividade:  %.2f Kg\n", p.produtividade);
+    printf("------------------------------------------\n");
+}
+
+// 7. Exibir a lista de plantio
+void exibe_lista_plantio (plantio p){
+    int i;
+    if(verifica_plantio_vazio(p) == 1){
+        printf("\n==================================\n");
+        printf(" A LISTA DE PLANTIO ESTA VAZIA.");  
+        printf("\n==================================\n\n");
+    }else{
+        printf("\n******** RELATORIO DA LISTA DE PLANTIO *************\n");
+        i = p.primeiro;
+        while (i < p.ultimo){
+            // CORREÇÃO: Chamada com 1 argumento
+            exibe_plantacao(p.elem[i]); 
+            i++;
+        }
+        printf("************ FIM DO RELATORIO *************\n\n");
     }
 }
 
-// 3. REGISTRAR COLHEITA
-void registrar_colheita_completa(plantio *p) {
-    int codigo, i, j;
-    
-    // 3.1. Verificar se o plantio está vazio
-    if (verifica_plantio_vazio(*p)) {
-        printf("Nenhuma plantacao cadastrada para colher!\n");
+// 8. Consultar plantação (POR NOME - Retorna o PRIMEIRO índice)
+int consultar_plantacao_lista (plantio p, char nome_cultivo[]){
+    int i;
+    if(verifica_plantio_vazio(p) == 1){
+        return -1;
+    }
+    i = p.primeiro;
+    while(i < p.ultimo){
+        if(strcmp(nome_cultivo, p.elem[i].cultivo) == 0){
+            return i; // Retorna o índice
+        }
+        i++;
+    }
+    return -1;
+}
+
+// 9. Remover plantação
+void remover_plantacao_lista(plantio *p, int i){
+    int j;
+    j = i;
+    while(j < p -> ultimo -1){
+        p -> elem[j] = p -> elem[j+1];
+        j++;
+    }
+    p -> ultimo--;
+}
+
+// 10. Alterar plantação
+void alterar_plantacao_lista (plantio *p, int i){
+    plantacao cultura_nova;
+    int cod_antigo;
+    printf("\n--- Alterando Cultivo ---\n");
+    printf("Dados atuais:\n");
+    // CORREÇÃO: Chamada com 1 argumento
+    exibe_plantacao(p->elem[i]); 
+    cod_antigo = p->elem[i].cod;
+    printf("\nDigite os NOVOS dados para este cultivo:\n");
+    ler_plantacao(&cultura_nova);
+    if(cultura_nova.cod == cod_antigo){
+        p ->elem[i] = cultura_nova;
+        printf("Cultivo alterado com sucesso (mantido na mesma posicao).\n");
+    }else{
+        printf("Aviso: O codigo foi alterado. Reordenando a lista...\n");
+        remover_plantacao_lista(p, i);
+        inserir_plantacao(p, cultura_nova);
+        printf("Cultivo alterado e realocado com sucesso.\n");
+    }
+}
+
+// 11. Menu
+void MENU(){
+    printf("\n* * * * * GESTAO DE PLANTIO * * * * *\n");
+    printf("+--------------------------------------+\n");
+    printf("| 1 - Inserir Nova Plantacao\n");
+    printf("| 2 - Alterar Plantacao\n");
+    printf("| 3 - Remover Plantacao (Colher)\n");
+    printf("| 4 - Consultar Plantacao (por nome)\n");
+    printf("| 5 - Exibir 1 Plantacao (por posicao)\n");
+    printf("| 6 - Exibir Todas Plantacoes\n");
+    printf("| 7 - Filtrar por Categoria\n");
+    printf("| 8 - Alerta de Colheita (por Mes/Ano)\n");
+    printf("| 9 - Resumo de Ocupacao\n");
+    printf("| 10 - Sair\n");
+    printf("+--------------------------------------+\n");
+    printf("Opcao: ");
+}
+
+
+// --- Funções de Relatório (Novas do PDF) ---
+
+// (Chamada pelo CASE 4)
+void exibe_lista_por_nome(plantio p) {
+    char nome_busca[40];
+    int i, contador;
+
+    printf("\n--- 4. Consultar Plantacao (por nome) ---\n");
+    if (verifica_plantio_vazio(p) == 1) {
+        printf("ERRO: A lista esta VAZIA! Nada para consultar.\n");
         return;
     }
     
-    // 3.2. Mostrar a lista de plantações cadastradas
-    printf("\n------- REGISTRAR COLHEITA -------\n");
-    printf("Plantacoes cadastradas:\n");
-    for (i = 0; i < p->ultimo; i++) {
-        printf("COD: %d - %s (Plantio: %02d/%02d/%04d)\n", 
-               p->elem[i].cod, p->elem[i].cultivo,
-               p->elem[i].data_plantio.dia, 
-               p->elem[i].data_plantio.mes, 
-               p->elem[i].data_plantio.ano);
-    }
+    printf("Digite o nome do cultivo que deseja CONSULTAR: ");
+    fgets(nome_busca, 40, stdin);
+    remover_newline(nome_busca);
     
-    // 3.3. Pegar o código da plantação que deseja ser registrada
-    printf("\nDigite o CODIGO da plantacao a ser colhida: ");
-    scanf("%d", &codigo);
-    getchar();
+    printf("\n******** RELATORIO: Plantios com o nome '%s' *************\n", nome_busca);
     
-    // 3.4. Buscar a plantação pelo código
-    int posicao = -1;
-    for (i = 0; i < p->ultimo; i++) {
-        if (p->elem[i].cod == codigo) {
-            posicao = i;
-            break;
+    i = p.primeiro;
+    contador = 0;
+    
+    while(i < p.ultimo) {
+        if(strcmp(nome_busca, p.elem[i].cultivo) == 0) {
+            // CORREÇÃO: Chamada com 1 argumento
+            exibe_plantacao(p.elem[i]); 
+            contador++;
         }
+        i++;
     }
     
-    if (posicao == -1) {
-        printf("Plantacao com codigo %d nao encontrada!\n", codigo);
-        return;
-    }
-    
-    // 3.5. Mostrar dados da plantação
-    printf("\n>>> CONFIRMAR COLHEITA <<<\n");
-    exibe_plantacao(p->elem[posicao]);
-    
-    // 3.6. Confirmar registro da colheita
-    char confirmacao;
-    printf("Confirmar colheita? (S/N): ");
-    scanf("%c", &confirmacao);
-    getchar();
-    
-    if (confirmacao == 'S' || confirmacao == 's') {
-        // 3.7. Registrar data real da colheita
-        data data_real_colheita;
-        printf("Digite a data REAL da colheita (DD/MM/AAAA): ");
-        scanf("%d/%d/%d", &data_real_colheita.dia, &data_real_colheita.mes, &data_real_colheita.ano);
-        getchar();
-        
-        // 3.8. Mostra mensagem de sucesso
-        printf("\n>>> COLHEITA REGISTRADA COM SUCESSO! <<<\n");
-        printf("Cultura: %s\n", p->elem[posicao].cultivo);
-        printf("Data plantio: %02d/%02d/%04d\n", 
-               p->elem[posicao].data_plantio.dia,
-               p->elem[posicao].data_plantio.mes,
-               p->elem[posicao].data_plantio.ano);
-        printf("Data colheita: %02d/%02d/%04d\n",
-               data_real_colheita.dia,
-               data_real_colheita.mes,
-               data_real_colheita.ano);
-        printf("Talhao liberado para pousio/novo plantio!\n");
-        
-        // 3.9. REMOVER A PLANTAÇÃO DA LISTA
-        // Deslocar todos os elementos uma posição para trás
-        for (i = posicao; i < p->ultimo - 1; i++) {
-            p->elem[i] = p->elem[i + 1];
-        }
-        
-        // 3.10. Atualizar o contador
-        p->ultimo--;
-        
-        printf("Total de plantacoes ativas: %d\n", p->ultimo);
-        
+    if(contador == 0) {
+        printf("\nNenhum plantio encontrado com o nome '%s'.\n", nome_busca);
     } else {
-        printf("Colheita cancelada.\n");
+        printf("\n%d plantio(s) encontrado(s) com o nome '%s'.\n", contador, nome_busca);
     }
+    printf("************ FIM DO RELATORIO *************\n\n");
 }
 
-// 4. ALTERAR PLANTAÇÃO
-void alterar_plantacao(plantio *p) {
-    int codigo, i;
-    int opcao;
-    char resposta;
+
+void exibe_lista_por_categoria(plantio p) {
+    int i, contador;
     
-    if (verifica_plantio_vazio(*p)) {
-        printf("Nenhuma plantacao cadastrada para alterar!\n");
+    printf("\n--- 7. Filtrar por Categoria ---\n");
+    if (verifica_plantio_vazio(p) == 1) {
+        printf("ERRO: A lista esta VAZIA! Nada para filtrar.\n");
         return;
     }
     
-    printf("\n====== ALTERAR DADOS DA PLANTAÇÃO ======\n");
+    printf("Digite a categoria que deseja filtrar:\n");
+    printf("(1=Leguminosas, 2=Cereal, 3=Hortalica, 4=Frutifera, 5=Outro): ");
+    categoriaPlanta tipo_procurado = (categoriaPlanta)ler_inteiro(); 
     
-    // 4.1. Listar plantações disponíveis
-    printf("Plantacoes cadastradas:\n");
-    for (i = 0; i < p->ultimo; i++) {
-        printf("COD: %d - %s\n", p->elem[i].cod, p->elem[i].cultivo);
-    }
+    const char* nome_categoria = categorias(tipo_procurado);
     
-    // 4.2. Buscar plantação
-    printf("\nDigite o CODIGO da plantacao a ser alterada: ");
-    scanf("%d", &codigo);
-    getchar();
+    printf("\n******** RELATORIO: Plantios da Categoria '%s' *************\n", nome_categoria);
     
-    int posicao = -1;
-    for (i = 0; i < p->ultimo; i++) {
-        if (p->elem[i].cod == codigo) {
-            posicao = i;
-            break;
+    i = p.primeiro;
+    contador = 0;
+    
+    while(i < p.ultimo) {
+        if(p.elem[i].tipo == tipo_procurado) {
+            // CORREÇÃO: Chamada com 1 argumento
+            exibe_plantacao(p.elem[i]); 
+            contador++;
         }
+        i++;
     }
     
-    if (posicao == -1) {
-        printf("Plantacao com codigo %d nao encontrada!\n", codigo);
+    if(contador == 0) {
+        printf("\nNenhum plantio encontrado para a categoria '%s'.\n", nome_categoria);
+    } else {
+        printf("\n%d plantio(s) encontrado(s) para a categoria '%s'.\n", contador, nome_categoria);
+    }
+    printf("************ FIM DO RELATORIO *************\n\n");
+}
+
+// (Função MODIFICADA Mês/Ano)
+void alerta_colheita_por_mes_e_ano(plantio p) {
+    int mes_procurado, ano_procurado, i, contador;
+    
+    printf("\n--- 8. Alerta de Colheita por Mes e Ano ---\n");
+    if (verifica_plantio_vazio(p) == 1) {
+        printf("ERRO: A lista esta VAZIA! Nada para consultar.\n");
         return;
     }
     
-    // 4.3. Mostrar dados atuais
-    printf("\n>>> DADOS ATUAIS DA PLANTAÇÃO:\n");
-    exibe_plantacao(p->elem[posicao]);
+    printf("Digite o numero do mes que deseja verificar (1-12): ");
+    mes_procurado = ler_inteiro(); 
     
-    // 4.4. Menu de alteração
-    do {
-        printf("\n--- O QUE DESEJA ALTERAR? ---\n");
-        printf("1. Nome do Cultivo\n");
-        printf("2. Status de Irrigacao\n");
-        printf("3. Categoria\n");
-        printf("4. Data de Plantio\n");
-        printf("5. Data Prevista de Colheita\n");
-        printf("6. Produtividade Media\n");
-        printf("0. Finalizar Alteracoes\n");
-        printf("Escolha uma opcao: ");
-        scanf("%d", &opcao);
-        getchar();
-        
-        switch(opcao) {
+    printf("Digite o ano que deseja verificar (Ex: 2025): ");
+    ano_procurado = ler_inteiro();
+    
+    if(mes_procurado < 1 || mes_procurado > 12) {
+        printf("ERRO: Mes invalido. Digite um numero entre 1 e 12.\n");
+        return;
+    }
+    if(ano_procurado < 2000 || ano_procurado > 2100) {
+        printf("ERRO: Ano invalido. (Permitido entre 2000 e 2100).\n");
+        return;
+    }
+    
+    printf("\n** RELATORIO: Colheitas previstas para %02d/%d **\n", mes_procurado, ano_procurado);
+    
+    i = p.primeiro;
+    contador = 0;
+    
+    while(i < p.ultimo) {
+        if(p.elem[i].colheita.mes == mes_procurado && p.elem[i].colheita.ano == ano_procurado) {
+            // CORREÇÃO: Chamada com 1 argumento
+            exibe_plantacao(p.elem[i]); 
+            contador++;
+        }
+        i++;
+    }
+    
+    if(contador == 0) {
+        printf("\nNenhuma colheita prevista para %02d/%d.\n", mes_procurado, ano_procurado);
+    } else {
+        printf("\n%d colheita(s) prevista(s) para %02d/%d.\n", contador, mes_procurado, ano_procurado);
+    }
+    printf("************ FIM DO RELATORIO *************\n\n");
+}
+
+void controle_ocupacao(plantio p) {
+    int plantados = p.ultimo;
+    int livres = MAX - plantados;
+    float porcentagem_ocupada = ((float)plantados / MAX) * 100.0; 
+    
+    printf("\n--- 9. Resumo de Ocupacao dos Talhoes ---\n");
+    printf("+--------------------------------------+\n");
+    printf("| Capacidade Total: %d talhoes\n", MAX);
+    printf("| Talhoes Plantados: %d\n", plantados);
+    printf("| Talhoes Livres:    %d\n", livres);
+    printf("| Ocupacao:          %.2f %%\n", porcentagem_ocupada);
+    printf("+--------------------------------------+\n\n");
+}
+
+
+// 12. Função principal
+int main(){
+
+    plantio meu_plantio;
+    plantacao cultura_temp;
+    char nome_busca[40];
+    int op;
+    int pos;
+
+    criar_plantio_vazio(&meu_plantio);
+
+    do{
+        MENU();
+        op = ler_inteiro(); 
+
+        switch (op) {
             case 1:
-                printf("Novo nome do cultivo: ");
-                fgets(p->elem[posicao].cultivo, 40, stdin);
-                remover_newline(p->elem[posicao].cultivo);
-                printf("Cultivo alterado para: %s\n", p->elem[posicao].cultivo);
-                break;
-                
-            case 2:
-                printf("É irrigado? (S/N): ");
-                scanf("%c", &resposta);
-                getchar();
-                p->elem[posicao].irrigado = (resposta == 'S' || resposta == 's');
-                printf("Irrigacao alterada para: %s\n", 
-                       p->elem[posicao].irrigado ? "Sim" : "Nao");
-                break;
-                
-            case 3:
-                printf("Nova categoria (0=Leguminosas, 1=Cereal, 2=Hortalica, 3=Frutifera, 4=Outro): ");
-                int novoTipo;
-                scanf("%d", &novoTipo);
-                getchar();
-                if (novoTipo >= 0 && novoTipo <= 4) {
-                    p->elem[posicao].tipo = (categoriaPlanta)novoTipo;
-                    printf("Categoria alterada para: %s\n", categorias(p->elem[posicao].tipo));
+                printf("\n--- 1. Inserir Plantacao ---\n");
+                if (verifica_plantio_cheio(meu_plantio) == 1) { 
+                    printf("ERRO: A lista de plantio esta CHEIA!\n");
                 } else {
-                    printf("Categoria invalida!\n");
+                    ler_plantacao(&cultura_temp); 
+                    inserir_plantacao(&meu_plantio, cultura_temp);
                 }
                 break;
-                
-            case 4:
-                printf("Nova data de plantio (DD/MM/AAAA): ");
-                scanf("%d/%d/%d", &p->elem[posicao].data_plantio.dia, 
-                                  &p->elem[posicao].data_plantio.mes, 
-                                  &p->elem[posicao].data_plantio.ano);
-                getchar();
-                printf("Data de plantio alterada para: %02d/%02d/%04d\n",
-                       p->elem[posicao].data_plantio.dia,
-                       p->elem[posicao].data_plantio.mes,
-                       p->elem[posicao].data_plantio.ano);
-                break;
-                
-            case 5:
-                printf("Nova data prevista de colheita (DD/MM/AAAA): ");
-                scanf("%d/%d/%d", &p->elem[posicao].colheita.dia, 
-                                  &p->elem[posicao].colheita.mes, 
-                                  &p->elem[posicao].colheita.ano);
-                getchar();
-                printf("Data de colheita alterada para: %02d/%02d/%04d\n",
-                       p->elem[posicao].colheita.dia,
-                       p->elem[posicao].colheita.mes,
-                       p->elem[posicao].colheita.ano);
-                break;
-                
-            case 6:
-                printf("Nova produtividade media: ");
-                scanf("%f", &p->elem[posicao].produtividade);
-                getchar();
-                printf("Produtividade alterada para: %.2f\n", p->elem[posicao].produtividade);
-                break;
-                
-            case 0:
-                printf("Alteracoes finalizadas.\n");
-                break;
-                
-            default:
-                printf("Opcao invalida!\n");
-        }
-        
-    } while (opcao != 0);
-    
-    printf("\n>>> PLANTAÇÃO ATUALIZADA COM SUCESSO!\n");
-    exibe_plantacao(p->elem[posicao]);
-}
-
-// 5. Exibir Relatório de Talhões
-void exibir_resumo_talhoes(plantio p) {
-    int talhoes_ocupados = p.ultimo;
-    int talhoes_livres = MAX - p.ultimo;
-    float percentual_ocupacao = (float)talhoes_ocupados / MAX * 100;
-    float percentual_livre = (float)talhoes_livres / MAX * 100;
-    
-    printf("\n====== RESUMO DOS TALHÕES ======\n");
-    printf("Capacidade total do sistema: %d talhões\n\n", MAX);
-    
-    // 5.1. Barra de progresso visual
-    printf("Situação atual: [");
-    int i;
-    for (i = 0; i < 50; i++) {
-        if (i < (percentual_ocupacao / 2)) {
-            printf("█"); // Caractere para ocupado
-        } else {
-            printf("░"); // Caractere para livre
-        }
-    }
-    printf("]\n\n");
-    
-    // 5.2. Estatísticas detalhadas
-    printf("TALHÕES OCUPADOS:\n");
-    printf("  Quantidade: %d talhões\n", talhoes_ocupados);
-    printf("  Percentual: %.1f%%\n", percentual_ocupacao);
-    
-    printf("\nTALHÕES LIVRES:\n");
-    printf("  Quantidade: %d talhões\n", talhoes_livres);
-    printf("  Percentual: %.1f%%\n", percentual_livre);
-    
-    // 5.3. Status do sistema
-    printf("\nSTATUS DO SISTEMA: ");
-    if (talhoes_ocupados == 0) {
-        printf("🟢 TODOS OS TALHÕES LIVRES\n");
-        printf("   Sistema completamente disponível para novos plantios\n");
-    } else if (talhoes_livres == 0) {
-        printf("🔴 SISTEMA LOTADO\n");
-        printf("   Todos os talhões estão ocupados\n");
-    } else if (percentual_ocupacao > 80) {
-        printf("🟡 SISTEMA QUASE LOTADO\n");
-        printf("   Poucos talhões disponíveis\n");
-    } else if (percentual_ocupacao > 50) {
-        printf("🟠 SISTEMA EM USO MODERADO\n");
-        printf("   Boa quantidade de talhões disponíveis\n");
-    } else {
-        printf("🟢 SISTEMA COM BOA CAPACIDADE\n");
-        printf("   Muitos talhões disponíveis\n");
-    }
-    
-    // 5.4. Listar plantações ativas se houver
-    if (talhoes_ocupados > 0) {
-        printf("\nPLANTAÇÕES ATIVAS:\n");
-        for (i = 0; i < p.ultimo; i++) {
-            printf("  Talhão %d: %s (COD: %d)\n", 
-                   i, p.elem[i].cultivo, p.elem[i].cod);
-        }
-    }
-    
-    printf("\n=================================\n");
-}
-
-data obter_data_atual() {
-    time_t t = time(NULL);
-    struct tm *agora = localtime(&t);
-    data data_atual;
-    data_atual.dia = agora->tm_mday;
-    data_atual.mes = agora->tm_mon + 1; // tm_mon é 0-11
-    data_atual.ano = agora->tm_year + 1900; // tm_year é anos desde 1900
-    return data_atual;
-}
-
-time_t data_para_time_t(data d) {
-    struct tm t;
-    t.tm_mday = d.dia;
-    t.tm_mon = d.mes - 1;   // time.h usa mês 0-11
-    t.tm_year = d.ano - 1900; // time.h usa ano desde 1900
-    t.tm_hour = 0;
-    t.tm_min = 0;
-    t.tm_sec = 0;
-    t.tm_isdst = -1; // Deixa o sistema determinar se há Horário de Verão
-    return mktime(&t);
-}
-
-void consultar_colheita_proxima(plantio p) {
-    int i;
-    int colheitas_encontradas = 0;
-    
-    // 1. Obter a data atual
-    data hoje = obter_data_atual();
-    time_t hoje_ts = data_para_time_t(hoje);
-    
-    // 2. Calcular o limite de tempo (15 dias em segundos)
-    const long long QUINZE_DIAS_SEGUNDOS = 15LL * 24 * 60 * 60;
-    time_t limite_ts = hoje_ts + QUINZE_DIAS_SEGUNDOS;
-
-    printf("\n\n=== 🚨 ALERTA DE COLHEITA PRÓXIMA 🚨 ===\n");
-    printf("         Data Atual: %02d/%02d/%04d\n", hoje.dia, hoje.mes, hoje.ano);
-    printf("         Plantios nos próximos 15 dias\n");
-    printf("========================================\n");
-
-    if (p.ultimo == 0) {
-        printf("Nenhuma plantação ativa cadastrada.\n");
-        return;
-    }
-
-    for (i = 0; i < p.ultimo; i++) {
-        time_t colheita_ts = data_para_time_t(p.elem[i].colheita);
-        
-        // Colheita deve ser após ou igual a 'hoje' E antes ou igual a 'limite'
-        if (colheita_ts >= hoje_ts && colheita_ts <= limite_ts) {
-            
-            // Calcula a diferença em dias (aproximada, já que time_t é mais preciso)
-            double diferenca_segundos = difftime(colheita_ts, hoje_ts);
-            int dias_restantes = (int)(diferenca_segundos / (24.0 * 60.0 * 60.0));
-            
-            printf("\n-- Plantacao COD: %d --\n", p.elem[i].cod);
-            printf("  Cultivo:          %s\n", p.elem[i].cultivo);
-            printf("  Categoria:        %s\n", categorias(p.elem[i].tipo));
-            printf("  **Previsão de Colheita:** %02d/%02d/%04d\n",
-                   p.elem[i].colheita.dia,
-                   p.elem[i].colheita.mes,
-                   p.elem[i].colheita.ano);
-            printf("  **Dias Restantes:**     %d dias\n", dias_restantes);
-            printf("--------------------------\n");
-            
-            colheitas_encontradas++;
-        }
-    }
-
-    // 4. Exibir resultado final
-    if (colheitas_encontradas == 0) {
-        printf("\nNenhuma plantação com colheita prevista nos próximos 15 dias.\n");
-    } else {
-        printf("\nTotal de alertas de colheita: %d plantações.\n", colheitas_encontradas);
-    }
-    printf("========================================\n");
-}
-
-void menu_principal() {
-    plantio sistema;
-    int opcao;
-    
-    criar_plantio_vazio(&sistema);
-    
-    printf("=========================================\n");
-    printf("    SISTEMA DE ROTACAO DE CULTURAS\n");
-    printf("=========================================\n");
-    
-    do {
-        printf("\n========== MENU PRINCIPAL ==========\n");
-        printf("1. CADASTRAR PLANTIO\n");
-        printf("2. CONSULTAR PLANTIO\n");
-        printf("3. REGISTRAR COLHEITA\n");
-        printf("4. ATUALIZAR PLANTIO\n");
-        printf("5. OBTER RELATÓRIO DE TALHÕES\n");
-        printf("6. CONSULTAR COLHEITAS PRÓXIMAS\n");
-        printf("0. SAIR DO SISTEMA\n");
-        printf("-----------------------------------\n");
-        printf("Escolha uma opcao: ");
-        
-        scanf("%d", &opcao);
-        getchar();
-        
-        switch(opcao) {
-            case 1:
-                cadastrar_plantacao(&sistema);
-                break;
             case 2:
-                consultar_plantio(sistema);
+                printf("\n--- 2. Alterar Plantacao ---\n");
+                if (verifica_plantio_vazio(meu_plantio) == 1) {
+                    printf("ERRO: A lista esta VAZIA! Nada para alterar.\n");
+                    break;
+                }
+                printf("Digite o nome do cultivo que deseja ALTERAR: ");
+                fgets(nome_busca, 40, stdin);
+                remover_newline(nome_busca);
+                pos = consultar_plantacao_lista(meu_plantio, nome_busca); 
+                if (pos == -1) {
+                    printf("ERRO: Cultivo '%s' nao foi encontrado.\n", nome_busca);
+                } else {
+                    alterar_plantacao_lista(&meu_plantio, pos);
+                }
                 break;
             case 3:
-                registrar_colheita(&sistema);
+                printf("\n--- 3. Remover Plantacao (Colher) ---\n");
+                if (verifica_plantio_vazio(meu_plantio) == 1) {
+                    printf("ERRO: A lista esta VAZIA! Nada para remover.\n");
+                    break;
+                }
+                printf("Digite o nome do cultivo que foi COLHIDO (remover): ");
+                fgets(nome_busca, 40, stdin);
+                remover_newline(nome_busca);
+                pos = consultar_plantacao_lista(meu_plantio, nome_busca);
+                if (pos == -1) {
+                    printf("ERRO: Cultivo '%s' nao foi encontrado.\n", nome_busca);
+                } else {
+                    cultura_temp = meu_plantio.elem[pos];
+                    remover_plantacao_lista(&meu_plantio, pos);
+                    printf("Colheita do '%s' (Cod: %d) registrada com sucesso. Talhao livre.\n", cultura_temp.cultivo, cultura_temp.cod);
+                }
                 break;
             case 4:
-                alterar_plantacao(&sistema);
+                exibe_lista_por_nome(meu_plantio);
                 break;
             case 5:
-                exibir_resumo_talhoes(sistema);
+                printf("\n--- 5. Exibir 1 Plantacao (por Posicao) ---\n");
+                if (verifica_plantio_vazio(meu_plantio) == 1) {
+                    printf("ERRO: A lista esta VAZIA!\n");
+                    break;
+                }
+                printf("Digite a POSICAO (talhao) que deseja ver (1 a %d): ", meu_plantio.ultimo);
+                pos = ler_inteiro(); 
+                if (pos >= 1 && pos <= meu_plantio.ultimo) {
+            
+                    exibe_plantacao(meu_plantio.elem[pos - 1]); 
+                } else {
+                    printf("ERRO: Posicao %d invalida ou nao existe.\n", pos);
+                }
                 break;
             case 6:
-                consultar_colheita_proxima(sistema);
-            case 0:
-                printf("\n>>> Obrigado por usar o Sistema de Rotacao de Culturas!\n");
-                printf(">>> Encerrando programa...\n");
+                printf("\n--- 6. Exibir Todas Plantacoes ---\n");
+                exibe_lista_plantio(meu_plantio);
+                break;
+            case 7:
+                exibe_lista_por_categoria(meu_plantio);
+                break;
+            case 8:
+                alerta_colheita_por_mes_e_ano(meu_plantio); 
+                break;
+            case 9:
+                controle_ocupacao(meu_plantio);
+                break;
+            case 10:
+                printf("\nObrigado por usar o sistema de Gestao de Plantio. Ate logo!\n");
                 break;
             default:
-                printf("\n>>> ERRO: Opcao invalida! Tente novamente.\n");
-        }
-        
-        if (opcao != 0) {
-            printf("\nPressione ENTER para continuar...");
-            getchar();
-        }
-        
-    } while (opcao != 0);
+                printf("\nERRO: Opcao invalida. Por favor, digite um numero de 1 a 10.\n");
+                break;
+        } 
+    }while (op != 10);
+
+    return 0;
 }
