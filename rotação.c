@@ -1,7 +1,7 @@
 //Bibliotecas
 #include <stdio.h>
 #include <string.h>
-#include <stdlib.h> // Para atoi (converte string para int) e atof (converte string para float)
+#include <stdlib.h> 
 #include <stdbool.h>
 
 //Máximo de plantações para rotação
@@ -49,7 +49,7 @@ void remover_newline(char *str);
 void ler_plantacao(plantacao *p);
 void inserir_plantacao(plantio *p, plantacao nova_cultura);
 const char* categorias(categoriaPlanta tipo);
-void exibe_plantacao(plantacao p); // <-- SÓ 1 ARGUMENTO
+void exibe_plantacao(plantacao p); 
 void exibe_lista_plantio (plantio p);
 int consultar_plantacao_lista (plantio p, char nome_cultivo[]);
 int consultar_plantacao_lista_por_cod(plantio p, int cod);
@@ -63,7 +63,7 @@ int ler_inteiro();
 float ler_float();
 void exibe_lista_por_nome(plantio p); 
 
-// --- FUNÇÕES DE LEITURA SEGURA ---
+// --- FUNÇÕES DE LEITURA ---
 void remover_newline(char *str){
     size_t len = strlen(str);
     if (len > 0 && str[len - 1] == '\n'){
@@ -170,7 +170,7 @@ const char* categorias(categoriaPlanta tipo){
     }
 }
 
-// (Bónus) Consulta por CÓDIGO (para exibir o talhão)
+// Consulta por CÓDIGO (para exibir o talhão)
 int consultar_plantacao_lista_por_cod(plantio p, int cod){
     int i;
     if(verifica_plantio_vazio(p) == 1){
@@ -187,12 +187,10 @@ int consultar_plantacao_lista_por_cod(plantio p, int cod){
 }
 
 
-// 6. Exibir uma plantação (Definição com 1 argumento)
+// 6. Exibir uma plantação 
 void exibe_plantacao(plantacao p){
  
     printf("------------------------------------------\n");
-    // Mostra o Talhão (posição 1-based) e o Código
-    // Se não encontrar (improvável), mostra -1+1 = 0
     printf("   Plantacao COD: %d\n", p.cod);
     printf("------------------------------------------\n");
     printf("  Cultivo:       %s\n", p.cultivo);
@@ -215,7 +213,6 @@ void exibe_lista_plantio (plantio p){
         printf("\n******** RELATORIO DA LISTA DE PLANTIO *************\n");
         i = p.primeiro;
         while (i < p.ultimo){
-            // CORREÇÃO: Chamada com 1 argumento
             exibe_plantacao(p.elem[i]); 
             i++;
         }
@@ -256,7 +253,6 @@ void alterar_plantacao_lista (plantio *p, int i){
     int cod_antigo;
     printf("\n--- Alterando Cultivo ---\n");
     printf("Dados atuais:\n");
-    // CORREÇÃO: Chamada com 1 argumento
     exibe_plantacao(p->elem[i]); 
     cod_antigo = p->elem[i].cod;
     printf("\nDigite os NOVOS dados para este cultivo:\n");
@@ -290,9 +286,6 @@ void MENU(){
     printf("Opcao: ");
 }
 
-
-// --- Funções de Relatório (Novas do PDF) ---
-
 // (Chamada pelo CASE 4)
 void exibe_lista_por_nome(plantio p) {
     char nome_busca[40];
@@ -315,7 +308,6 @@ void exibe_lista_por_nome(plantio p) {
     
     while(i < p.ultimo) {
         if(strcmp(nome_busca, p.elem[i].cultivo) == 0) {
-            // CORREÇÃO: Chamada com 1 argumento
             exibe_plantacao(p.elem[i]); 
             contador++;
         }
@@ -341,7 +333,7 @@ void exibe_lista_por_categoria(plantio p) {
     }
     
     printf("Digite a categoria que deseja filtrar:\n");
-    printf("(1=Leguminosas, 2=Cereal, 3=Hortalica, 4=Frutifera, 5=Outro): ");
+    printf("(1 = Leguminosas, 2 = Cereal, 3 = Hortalica, 4 = Frutifera, 5 = Outro): ");
     categoriaPlanta tipo_procurado = (categoriaPlanta)ler_inteiro(); 
     
     const char* nome_categoria = categorias(tipo_procurado);
